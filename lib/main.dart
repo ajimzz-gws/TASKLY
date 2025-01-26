@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 
 void main() {
-  runApp(TasklyApp());
+  runApp(const TasklyApp());
 }
 
 class TasklyApp extends StatelessWidget {
-  const TasklyApp({super.key});
+  const TasklyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +14,8 @@ class TasklyApp extends StatelessWidget {
       title: 'Taskly',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const HomeScreen(), // Ensure Homescreen is properly imported
+      home: const HomeScreen(),
     );
   }
 }
