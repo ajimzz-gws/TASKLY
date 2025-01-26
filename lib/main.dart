@@ -6,6 +6,8 @@ void main() {
 }
 
 class TasklyApp extends StatelessWidget {
+  const TasklyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
