@@ -19,14 +19,32 @@ class DatabaseHelper {
     return openDatabase(
       path,
       version: 1,
-      onCreate: (db, version) {
-        return db.execute(
-          'CREATE TABLE tasks(id INTEGER PRIMARY KEY, title TEXT, isCompleted INTEGER)',
-        );
-      },
+      onCreate: _onCreate, // Use the _onCreate function here
     );
   }
 
+  // Correctly initialize both tables
+  Future<void> _onCreate(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE collections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        color TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        isCompleted INTEGER,
+        collection_id INTEGER,
+        FOREIGN KEY (collection_id) REFERENCES collections (id)
+      )
+    ''');
+  }
+
+  // CRUD for tasks
   Future<int> insertTask(Task task) async {
     final db = await database;
     return await db.insert('tasks', task.toMap());
@@ -49,5 +67,26 @@ class DatabaseHelper {
     final db = await database;
     return await db
         .update('tasks', task.toMap(), where: 'id = ?', whereArgs: [task.id]);
+  }
+
+  // CRUD for collections
+  Future<int> addCollection(String name, String color) async {
+    final db = await database;
+    return await db.insert('collections', {'name': name, 'color': color});
+  }
+
+  Future<List<Map<String, dynamic>>> getCollections() async {
+    final db = await database;
+    return await db.query('collections');
+  }
+
+  Future<int> deleteCollection(int id) async {
+    final db = await database;
+
+    // First, delete all tasks associated with the collection
+    await db.delete('tasks', where: 'collection_id = ?', whereArgs: [id]);
+
+    // Then delete the collection
+    return await db.delete('collections', where: 'id = ?', whereArgs: [id]);
   }
 }

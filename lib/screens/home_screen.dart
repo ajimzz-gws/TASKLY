@@ -1,33 +1,11 @@
 import 'package:flutter/material.dart';
-import '../widgets/task_list.dart';
-import 'add_task_screen.dart';
-
-class HomeScreenOld extends StatelessWidget {
-  const HomeScreenOld({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Taskly')),
-      body: TaskList(),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddTaskScreen()),
-          );
-        },
-      ),
-    );
-  }
-}
-
-//Add a ListView to display tasks in the Scaffold body. For now, use a hardcoded list to represent the tasks.
+import 'collection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -36,11 +14,48 @@ class _HomeScreenState extends State<HomeScreen> {
     {'title': 'Do laundry', 'completed': false},
   ];
 
+  void _addTask() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String newTask = '';
+        return AlertDialog(
+          title: const Text('Add Task'),
+          content: TextField(
+            onChanged: (value) {
+              newTask = value;
+            },
+            decoration: const InputDecoration(hintText: 'Enter task title'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  if (newTask.isNotEmpty) {
+                    _tasks.add({'title': newTask, 'completed': false});
+                  }
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Taskly'),
+        title: const Text('Taskly'),
       ),
       body: ListView.builder(
         itemCount: _tasks.length,
@@ -56,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             trailing: IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.delete,
                 color: Colors.red,
               ),
@@ -75,48 +90,40 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-      
-          // Logic to add tasks (handled in Step 2).
-          //Add a FloatingActionButton to Add Tasks
-          //Add a dialog box to input new tasks. Update the onPressed method of the FloatingActionButton:
-         
         onPressed: () {
-          showDialog(
-          context: context,
-           builder: (BuildContext context) {
-            String newTask = '';
-              return AlertDialog(
-                title: Text('Add Task'),
-                 content: TextField(
-                  onChanged: (value) {
-                    newTask = value;
-                  },
-                  decoration: InputDecoration(hintText: 'Enter task title'),
-             ),
-            actions: [
-            TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text('Add Task'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _addTask();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.collections),
+                    title: const Text('View Collections'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CollectionsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
             },
-            child: Text('Cancel'),
-            ),
-            ElevatedButton(
-            onPressed: () {
-              setState(() {
-                if (newTask.isNotEmpty) {
-                  _tasks.add({'title': newTask, 'completed': false});
-                }
-              });
-              Navigator.of(context).pop();
-            },
-            child: Text('Add'),
-            ),
-           ],
-            );
-           },
           );
-         },
-        child: Icon(Icons.add),
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
