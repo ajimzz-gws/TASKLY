@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../widgets/task_list.dart';
+import 'add_task_screen.dart';
+import '../database_helper.dart';
 import 'collection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -9,10 +12,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<Map<String, dynamic>> _tasks = [
-    {'title': 'Buy groceries', 'completed': false},
-    {'title': 'Do laundry', 'completed': false},
-  ];
+  List<Map<String, dynamic>> _tasks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks(); // Load tasks from the database
+  }
+
+  Future<void> _loadTasks() async {
+    final tasks = await DatabaseHelper.instance.getTasks();
+    setState(() {
+      _tasks = tasks;
+    });
+  }
 
   void _addTask() {
     showDialog(
@@ -35,12 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  if (newTask.isNotEmpty) {
-                    _tasks.add({'title': newTask, 'completed': false});
-                  }
-                });
+              onPressed: () async {
+                if (newTask.isNotEmpty) {
+                  await DatabaseHelper.instance.addTask(newTask);
+                  _loadTasks(); // Reload tasks after adding
+                }
                 Navigator.of(context).pop();
               },
               child: const Text('Add'),
@@ -65,27 +77,40 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text(
               task['title'],
               style: TextStyle(
-                decoration: task['completed']
+                decoration: task['completed'] == 1
                     ? TextDecoration.lineThrough
                     : TextDecoration.none,
               ),
             ),
-            trailing: IconButton(
-              icon: const Icon(
-                Icons.delete,
-                color: Colors.red,
-              ),
-              onPressed: () {
-                setState(() {
-                  _tasks.removeAt(index);
-                });
-              },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    task['completed'] == 1
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                  ),
+                  onPressed: () async {
+                    await DatabaseHelper.instance.updateTask(
+                      task['id'],
+                      task['completed'] == 0 ? 1 : 0,
+                    );
+                    _loadTasks();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  ),
+                  onPressed: () async {
+                    await DatabaseHelper.instance.deleteTask(task['id']);
+                    _loadTasks();
+                  },
+                ),
+              ],
             ),
-            onTap: () {
-              setState(() {
-                task['completed'] = !task['completed'];
-              });
-            },
           );
         },
       ),
